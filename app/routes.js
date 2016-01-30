@@ -1,5 +1,28 @@
  // app/routes.js
+var promise = require('promise');
+var request = require('request');
+var wmata   = {
+    'stations_url' : 'https://api.wmata.com/Rail.svc/json/jStationEntrances',
+    'stationinfo_url' : 'https://api.wmata.com/Rail.svc/json/jStationInfo',
+    'key' : '1836b9f0b8b544a0ba70ab5264f7f78c'
+}
 
+
+
+
+if (typeof(Number.prototype.toRad) === "undefined") {
+  Number.prototype.toRad = function() {
+    return this * Math.PI / 180;
+  }
+}
+
+Array.prototype.max = function() {
+  return Math.max.apply(null, this);
+};
+
+Array.prototype.min = function() {
+  return Math.min.apply(null, this);
+};
 // grab the nerd model we just created
 // var Nerd = require('./models/nerd');
 
@@ -299,6 +322,7 @@ module.exports = function(app) {
      var resList = []
      var nums = params;
      nums.forEach(function(num){
+         console.log(num)
          var fnum = pf(num);
          resList.push(fnum)
      })
@@ -343,6 +367,7 @@ module.exports = function(app) {
          var primes = [];
          var reg = [];
          for (var i = num; i >= 0; i--) {
+            console.log(i)
              if(isprime(i) && isfactor(num, i) && i !== 1){
                 // for each prime non-1 factor...
 
@@ -370,6 +395,140 @@ module.exports = function(app) {
      res.json(resList)
 
  });
+
+
+
+
+
+
+
+
+
+    app.post('/api/getStation', function(req, res) {
+        // use mongoose to get all nerds in the database
+        var params = req.body;
+
+        try {
+            // getStations
+            // for each station, compute distance to current location
+            // map station to distance
+            // reduce list to station with the smallest distance
+            getStations(params)
+            .then(function(data){
+                console.log('got data')
+                var station = getClosestStation(params, data);
+
+                getStationInfo(station)
+                .then(function(stationInfo){
+                    var dta = {
+                        'station' : stationInfo['Name'],
+                        'stationLat' : stationInfo['Lat'],
+                        'stationLon' : stationInfo['Lon']
+                    }
+                    res.json(dta)
+                }, function(err){
+                    console.log(err)
+                })
+
+            }, function(err){
+                console.log(err)
+            })
+
+
+
+
+        } catch(e){
+            console.log(e)
+        }
+
+        function getStations(loc){
+            return new promise(function(resolve, reject){
+                request({
+                    url: wmata.stations_url, 
+                    method: 'GET', 
+                    qs: {
+                       "Lat": loc.latitude,
+                       "Lon": loc.longitude,
+                       "Radius": loc.radius,                    },                    
+                    headers: { 
+                        'api_key': wmata.key
+                    }
+                }, function (error, response, body) {
+                      if (!error && response.statusCode == 200) {
+                        resolve(JSON.parse(body)) 
+                      } else {
+                        reject(error)
+                      }
+                })
+            })
+        };
+
+        function getClosestStation(location, stationList){
+            console.log('computing haversine')
+            var stats = stationList['Entrances'].map(function(d,i){
+                return computeHaversine(location.latitude, location.longitude, d['Lat'], d['Lon'])
+            })
+
+            var closestDistance = stats.min();
+            var closestStationIndex = stats.indexOf(closestDistance);
+            return stationList['Entrances'][closestStationIndex]
+
+        };
+
+
+        function computeHaversine(lat1, lon1, lat2, lon2){
+            try{
+                var R = 6371000; // metres
+                var φ1 = lat1.toRad();
+                var φ2 = lat2.toRad();
+                var Δφ = (lat2-lat1).toRad();
+                var Δλ = (lon2-lon1).toRad();
+
+                var a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                        Math.cos(φ1) * Math.cos(φ2) *
+                        Math.sin(Δλ/2) * Math.sin(Δλ/2);
+                var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+                var d = R * c;
+                return d
+
+            } catch(e){
+                console.log(e)
+            }
+        }
+
+
+
+        function getStationInfo(station){
+            return new promise(function(resolve, reject){
+                request({
+                    url: wmata.stationinfo_url, 
+                    method: 'GET', 
+                    qs: {
+                       "StationCode": station['StationCode1']
+                    },
+                    headers: { 
+                        'api_key': wmata.key
+                    }
+                }, function (error, response, body) {
+                      if (!error && response.statusCode == 200) {
+                        resolve(JSON.parse(body)) 
+                      } else {
+                        reject(error)
+                      }
+                })
+            })
+        };
+
+
+
+
+    });
+
+
+
+
+
 
 
 
