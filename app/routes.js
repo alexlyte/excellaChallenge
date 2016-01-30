@@ -4,6 +4,7 @@ var request = require('request');
 var wmata   = {
     'stations_url' : 'https://api.wmata.com/Rail.svc/json/jStationEntrances',
     'stationinfo_url' : 'https://api.wmata.com/Rail.svc/json/jStationInfo',
+    'stationpredictions_url' : 'https://excellathon.herokuapp.com/wmata/StationPrediction.svc/json/GetPrediction/',
     'key' : '1836b9f0b8b544a0ba70ab5264f7f78c'
 }
 
@@ -415,17 +416,30 @@ module.exports = function(app) {
             // reduce list to station with the smallest distance
             getStations(params)
             .then(function(data){
-                console.log('got data')
+                console.log('got station data')
                 var station = getClosestStation(params, data);
-
                 getStationInfo(station)
                 .then(function(stationInfo){
-                    var dta = {
-                        'station' : stationInfo['Name'],
-                        'stationLat' : stationInfo['Lat'],
-                        'stationLon' : stationInfo['Lon']
-                    }
-                    res.json(dta)
+                    console.log('got station info')
+                    getStationPredictions(station)
+                    .then(function(trains){
+                        console.log('got station preds')
+                        console.log(trains)
+                        var departures = filterDepartingTrains(trains['Trains'])
+
+                        var dta = {
+                            'station' : stationInfo['Name'],
+                            'stationLat' : stationInfo['Lat'],
+                            'stationLon' : stationInfo['Lon'],
+                            'departures' : departures
+                        };
+
+                        res.json(dta);
+                    }, function(err){
+                        console.log(err)
+                    })
+
+
                 }, function(err){
                     console.log(err)
                 })
@@ -518,6 +532,53 @@ module.exports = function(app) {
                       }
                 })
             })
+        };
+
+
+
+        function getStationPredictions(station){
+            console.log(station)
+            return new promise(function(resolve, reject){
+                request({
+                    url: wmata.stationpredictions_url + station['StationCode1'], 
+                    method: 'GET', 
+                    // qs: {
+                    //    "StationCodes": []
+                    // },
+                    headers: { 
+                        'api_key': wmata.key
+                    }
+                }, function (error, response, body) {
+                      if (!error && response.statusCode == 200) {
+                        resolve(JSON.parse(body)) 
+                      } else {
+                        reject(error)
+                      }
+                })
+            })
+        };
+
+
+        function filterDepartingTrains(trains){
+            var trns = [];
+
+            // filter: 
+            // trains without a destination
+            // 
+
+            trains.forEach(function(d){
+                if(d['Destination'] !== ''){
+                    trns.push({
+                        'destination' : d['DestinationName'],
+                        'line'        : d['Line'],
+                        'minutes'     : d['Min']
+                    })
+                }
+            })
+
+
+
+            return trns
         };
 
 
