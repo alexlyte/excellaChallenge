@@ -288,6 +288,91 @@ module.exports = function(app) {
 
 
 
+
+
+ app.post('/api/getPrimeFactors', function(req, res) {
+     var params = req.body;
+     console.log(params)
+
+     var nums = params;
+
+     var resList = []
+     var nums = params;
+     nums.forEach(function(num){
+         var fnum = pf(num);
+         resList.push(fnum)
+     })
+
+
+     function pf(num){
+        // get all prime factors
+        var primes = getPrimeFactors(num)
+        return (primes)
+
+     }
+
+
+     function isprime(num){
+         var test = true;
+         for (var i = num - 1; i >= 2; i--) {
+             if(num % i === 0){
+                 test = false;
+             }
+         };
+
+         if(test){
+             return(true)
+         } else {
+             return(false)
+         }
+     }
+
+     function isfactor(num, fac){
+         if(num % fac === 0){
+             return(true)
+         } else {
+             return(false)
+         }
+     }
+
+
+
+
+     function getPrimeFactors(num){
+
+         var primes = [];
+         var reg = [];
+         for (var i = num; i >= 0; i--) {
+             if(isprime(i) && isfactor(num, i) && i !== 1){
+                // for each prime non-1 factor...
+
+                 var pmatch = num/i;
+
+                 if(reg.indexOf(i) === -1){
+                    if(pmatch === 1){
+                       primes.push(i)                    
+                    } else {
+                       primes.push(i)
+                       primes.push(pmatch)
+                    }                    
+                 }
+                 reg.push(pmatch)
+
+             }
+
+         };
+         return primes
+     };
+
+
+
+
+     res.json(resList)
+
+ });
+
+
+
     // frontend routes =========================================================
     // route to handle all angular requests
     app.get('/', function(req, res) {
