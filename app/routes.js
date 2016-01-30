@@ -150,6 +150,44 @@ module.exports = function(app) {
     });
 
 
+
+
+    app.post('/api/isprime', function(req, res) {
+        var params = req.body;
+        console.log(params)
+
+        var nums = params;
+
+        var resList = []
+        var nums = params;
+        nums.forEach(function(num){
+            var fnum = isprime(num);
+            resList.push(fnum)
+        })
+
+        function isprime(num){
+            var test = true;
+            for (var i = num - 1; i >= 2; i--) {
+                if(num % i === 0){
+                    test = false;
+                }
+            };
+
+            if(test){
+                return(true)
+            } else {
+                return(false)
+            }
+
+
+        }
+
+        res.json(resList)
+
+    });
+
+
+
     // frontend routes =========================================================
     // route to handle all angular requests
     app.get('/', function(req, res) {
