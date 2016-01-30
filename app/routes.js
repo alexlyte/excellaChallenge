@@ -93,6 +93,30 @@ module.exports = function(app) {
     });
 
 
+
+
+    app.post('/api/fibonacci', function(req, res) {
+        var params = req.body;
+        console.log(params)
+
+        var resList = []
+        var nums = params;
+        nums.forEach(function(num){
+            var fnum = getFib(num);
+            resList.push(fnum)
+        })
+
+        function getFib(num){
+
+            return Math.round((Math.pow(1.6180339, num) - Math.pow(-(0.6180339), num))/2.236067977)
+
+        }
+
+        res.json(resList)
+
+    });
+
+
     // frontend routes =========================================================
     // route to handle all angular requests
     app.get('/', function(req, res) {
