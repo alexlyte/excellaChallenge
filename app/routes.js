@@ -187,6 +187,35 @@ module.exports = function(app) {
     });
 
 
+    app.post('/api/sumsq', function(req, res) {
+        var params = req.body;
+        console.log(params)
+
+        var nums = params;
+
+        var resList = []
+        var nums = params;
+        nums.forEach(function(num){
+            var fnum = sumsq(num);
+            resList.push(fnum)
+        })
+
+        function sumsq(num){
+            var numAry = num.toString().split('');
+
+            var sum = 0;
+            numAry.forEach(function(n){
+                sum += Math.pow(Number(n), 2)
+            })
+
+            return sum
+
+        }
+
+        res.json(resList)
+
+    });
+
 
     // frontend routes =========================================================
     // route to handle all angular requests
