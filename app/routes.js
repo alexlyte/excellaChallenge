@@ -117,6 +117,39 @@ module.exports = function(app) {
     });
 
 
+
+
+    app.post('/api/fizzbuzz', function(req, res) {
+        var params = req.body;
+        console.log(params)
+
+        var nums = params;
+
+        var resList = []
+        var nums = params;
+        nums.forEach(function(num){
+            var fnum = getFiz(num);
+            resList.push(fnum)
+        })
+
+        function getFiz(num){
+
+            if( (num % 2 === 0) && (num % 3 === 0) ){
+                return "FizzBuzz"
+            } else if(num % 2 === 0){
+                return "Fizz"
+            } else if(num % 3 === 0){
+                return "Buzz"
+            } else {
+                return num
+            }
+        }
+
+        res.json(resList)
+
+    });
+
+
     // frontend routes =========================================================
     // route to handle all angular requests
     app.get('/', function(req, res) {
