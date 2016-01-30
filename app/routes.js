@@ -217,6 +217,77 @@ module.exports = function(app) {
     });
 
 
+
+    app.post('/api/sexyprimes', function(req, res) {
+        var params = req.body;
+        console.log(params)
+
+        var nums = params;
+
+        var resList = []
+        var nums = params;
+        // nums.forEach(function(num){
+        //     var fnum = sexyprimes(num);
+        //     resList.push(fnum)
+        // })
+
+        function sexyprimes(num){
+
+            // for a given number, 
+            // get the list of prime numbers from 1 to num
+            var primes = getPrimeFactors(num)
+            // for each prime factor, if there is a factor that is 6 away from another factor, return it
+            var sexyprimes = isSixAway(primes)
+            return (sexyprimes)
+
+
+        }
+
+        function isprime(num){
+            var test = true;
+            for (var i = num - 1; i >= 2; i--) {
+                if(num % i === 0){
+                    test = false;
+                }
+            };
+
+            if(test){
+                return(true)
+            } else {
+                return(false)
+            }
+        }
+
+        function getPrimeFactors(num){
+
+            var primes = [];
+            for (var i = num; i >= 0; i--) {
+                if(isprime(i)){
+                    primes.push(i)
+                }
+            };
+            return primes
+        };
+
+        function isSixAway(primeAry){
+            var pm = []
+            primeAry.forEach(function(n){
+
+                var pair = primeAry[primeAry.indexOf( (n+6) )]
+                if(pair !== -1 && n !== 1 && pair !== undefined){
+                    pm.push([n,pair])
+                }
+            })
+            return pm
+        };
+
+
+        res.json(sexyprimes(nums))
+
+    });
+
+
+
     // frontend routes =========================================================
     // route to handle all angular requests
     app.get('/', function(req, res) {
